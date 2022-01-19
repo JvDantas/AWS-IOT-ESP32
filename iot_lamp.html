@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  </script>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://code.jquery.com/jquery-migrate-1.4.1.min.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <!-- <script src="./main.js"></script> -->
+  <script type="text/javascript">
+    // //TO THE LED
+    $(window).load(function () {
+    });
+
+    $(document).ready(function () {
+      $("#onoff").click(function (event) {
+
+        currentvalue = document.getElementById('onoff').innerHTML;
+        if (currentvalue == "It's Off") {
+          // trying to add the value from text box 
+          //thingName = document.getElementById("txtField").value;
+          thingName = "test_esp32"
+          console.log(thingName);
+          var mydata = { "action": "on", "thingname": thingName };
+          console.log(mydata);
+          document.getElementById("onoff").innerHTML = "It's On";
+          document.getElementById("onoff").setAttribute("class", "button is-rounded is-large is-fullwidth is-loading");
+          $.ajax({
+            type: 'POST',
+            url: 'https://gjvhq1r777.execute-api.us-east-1.amazonaws.com/Dev/shadow-state',
+            contentType: 'application/json',
+            crossDomain: true,
+            processData: false,
+            dataType: "json",
+            data: JSON.stringify(mydata),
+            success: function (data) {
+              console.log(" on success");
+              document.getElementById("onoff").setAttribute("class", "button is-success is-rounded is-large is-fullwidth");
+            },
+            error: function (data) {
+              console.log(" on fail;");
+              document.getElementById("onoff").setAttribute("class", "button is-success is-rounded is-large is-fullwidth");
+            }
+          });
+        }
+        else {
+          document.getElementById("onoff").innerHTML = "It's Off";
+          // trying to add the value from text box 
+          //thingName = document.getElementById("txtField").value;
+          thingName = "test_esp32"
+          console.log(thingName);
+          var mydata = { "action": "off", "thingname": thingName };
+          console.log(mydata);
+          document.getElementById("onoff").innerHTML = "It's Off";
+          document.getElementById("onoff").setAttribute("class", "button is-rounded is-large is-fullwidth is-loading");
+          $.ajax({
+            type: 'POST',
+            url: 'https://gjvhq1r777.execute-api.us-east-1.amazonaws.com/Dev/shadow-state',
+            contentType: 'application/json',
+            crossDomain: true,
+            processData: false,
+            dataType: "json",
+            data: JSON.stringify(mydata),
+            success: function (data) {
+              console.log(" off success");
+              document.getElementById("onoff").setAttribute("class", "button is-danger is-rounded is-large is-fullwidth");
+            },
+            error: function (data) {
+              console.log(" off fail");
+              document.getElementById("onoff").setAttribute("class", "button is-danger is-rounded is-large is-fullwidth");
+            }
+          });
+        }
+      });
+
+      $("#fndbtn").click(function (event) {
+        console.log("testing the button");
+        //check the status of Shadow
+        thingName = "test_esp32"
+        //thingName = document.getElementById("txtField").value;
+        console.log(`thingname=${thingName}`);
+        $.ajax({
+          type: 'GET',
+          url: 'https://gjvhq1r777.execute-api.us-east-1.amazonaws.com/Dev/shadow-state',
+          contentType: 'application/json',
+          crossDomain: true,
+          processData: false,
+          dataType: "json",
+          data: `thingname=${thingName}`,
+          success: function (data) {
+            console.log("success");
+            console.log(data.status);
+            document.getElementById("onoff").innerHTML = data.status;
+            if (data.status == "It's On") {
+              document.getElementById("onoff").setAttribute("class", "button is-success is-rounded is-large is-fullwidth");
+            }
+            else {
+
+              document.getElementById("onoff").setAttribute("class", "button is-danger is-rounded is-large is-fullwidth");
+            }
+          },
+          error: function (data) {
+            console.log("error");
+          }
+        });
+      });
+    }); 
+  </script>
+</head>
+
+<body>
+  <!-- CODE 1 -->
+  <!-- <div class="columns is-mobile">
+    <div class="column is-2"> -->
+
+  </div>
+  <div class="column is-12">
+    <br><br><br><br><br>
+    <h1 class="title is-1" style="text-align: center;">DASHBOARD</h1>
+    <br><br>
+    <center>
+      <!-- <p>Enter Thing Name: </p> -->
+      &nbsp
+
+      <!-- <input name="txtField" type="text" maxlength="512" id="txtField" class="searchField" style="padding: 8px;" /> -->
+      &nbsp
+
+      <a class="button" id="fndbtn">CONECT WITH ESP32</a>
+
+      <br><br>
+      <a class="button is-info is-rounded is-large" id="onoff" value="on">Status: Ainda nao conectado</a>
+
+
+      <!-- CODE 2 -->
+      <br><br><br>
+      <div class="container">
+
+
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title"><strong>Grafico dos sensores conectados</strong></h3>
+          </div>
+          <div class="panel-body">
+            <div id="container1"></div>
+          </div>
+        </div>
+    </center>
+  </div>
+  <script type="text/javascript">
+    let humArr = [], tempArr = [], upArr = [];
+    let myChart = new Highcharts.chart({
+      chart: {
+        renderTo: 'container1'
+      },
+      // title: {
+      //   text: 'Line chart'
+      // },
+
+      // subtitle: {
+      //   text: 'subtitle'
+      // },
+
+      yAxis: {
+        title: {
+          text: 'Value'
+        }
+      },
+
+      xAxis: {
+        categories: upArr
+      },
+
+      legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle'
+      },
+
+      plotOptions: {
+        series: {
+          label: {
+            connectorAllowed: false
+          }
+        }
+      },
+      series: [{
+        name: 'Humdity',
+        data: []
+      }, {
+        name: 'Temperature',
+        data: []
+      }],
+
+      responsive: {
+        rules: [{
+          condition: {
+            maxWidth: 500
+          },
+          chartOptions: {
+            legend: {
+              layout: 'horizontal',
+              align: 'center',
+              verticalAlign: 'bottom'
+            }
+          }
+        }]
+      }
+    });
+
+    let getWheatherData = function () {
+      $.ajax({
+        type: "GET",
+        url: "https://streamdata-tcc2022.s3.amazonaws.com/myKey",  //example: https://mydatabucket.s3.amazonaws.com/myKey"
+        dataType: "json",
+        async: false,
+        success: function (data) {
+          console.log('data', data);
+          drawChart(data);
+        },
+        error: function (xhr, status, error) {
+          console.error("JSON error: " + status);
+        }
+      });
+    }
+
+    let drawChart = function (data) {
+
+      let { humidity, temperature, hour } = data;
+
+      //testes mermao
+      console.log("Humidade ta vazio?", $.isEmptyObject(humidity));
+      console.log("Temp ta vazio?", $.isEmptyObject(temperature));
+
+      var isEmptyHum = $.isEmptyObject(humidity);
+      var isEmptyTemp = $.isEmptyObject(temperature);
+
+      humidity = isEmptyHum ? 0 : humidity;
+      temperature = isEmptyTemp ? 0 : temperature;
+
+      console.log("Umidade:", humidity);
+      console.log("Temperatura:", temperature);
+
+      humArr.push(Number(humidity));
+      tempArr.push(Number(temperature));
+      upArr.push(hour);
+
+      myChart.series[0].setData(humArr, true)
+      myChart.series[1].setData(tempArr, true)
+    }
+
+    let intervalTime = 3 * 1000; // 3 second interval polling, change as you like
+    setInterval(() => {
+      getWheatherData();
+    }, intervalTime);
+  </script>
+</body>
+
+</html>
