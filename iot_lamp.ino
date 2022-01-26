@@ -9,7 +9,7 @@
 #include <NTPClient.h>
 
 // The MQTT topics that this device should publish/subscribe
-#define AWS_IOT_PUBLISH_TOPIC   " "
+#define AWS_IOT_PUBLISH_TOPIC   "$aws/things/test_esp32/shadow/update"
 #define AWS_IOT_SUBSCRIBE_TOPIC "$aws/things/test_esp32/shadow/update/delta"
 
 
