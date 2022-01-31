@@ -11,8 +11,8 @@
     href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
     rel="stylesheet">
 
-  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-  <script src="https://code.jquery.com/jquery-migrate-1.4.1.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://code.highcharts.com/highcharts.js"></script>
 
 
@@ -82,11 +82,78 @@
     }
   </style>
   <script type="text/javascript">
-    // //TO THE LED
-    $(window).load(function () {
+    // 
+    $(window).on('load', function () {
     });
 
     $(document).ready(function () {
+      // AUTO MODE
+      $("#auto").click(function (event) {
+        currentvalue = document.getElementById('autostatus').innerHTML;
+        if (currentvalue == "DESATIVADO") {
+          // trying to add the value from text box 
+          //thingName = document.getElementById("txtField").value;
+          thingName = "test_esp32"
+          console.log(thingName);
+          var mydata = { "action": "ligado", "thingname": thingName };
+          console.log(mydata);
+          document.getElementById("autostatus").innerHTML = "ATIVO";
+          $.ajax({
+            type: 'POST',
+            url: 'https://gjvhq1r777.execute-api.us-east-1.amazonaws.com/Dev/shadow-state',
+            contentType: 'application/json',
+            crossDomain: true,
+            processData: false,
+            dataType: "json",
+            data: JSON.stringify(mydata),
+            success: function (data) {
+              console.log(" on success");
+              document.getElementById("autostatus").setAttribute("class", "subtitle has-text-success");
+              document.getElementById("onoff").setAttribute("class", "tile is-child box notification is-light");
+              document.getElementById("linkled").setAttribute("style", "pointer-events: none;");
+            },
+            error: function (data) {
+              console.log(" on fail;");
+              document.getElementById("autostatus").setAttribute("class", "subtitle has-text-success");
+              document.getElementById("onoff").setAttribute("class", "tile is-child box notification is-light");
+              document.getElementById("linkled").setAttribute("style", "pointer-events: none;");
+            }
+          });
+        }
+        else {
+          document.getElementById("autostatus").innerHTML = "DESATIVADO";
+          // trying to add the value from text box 
+          //thingName = document.getElementById("txtField").value;
+          thingName = "test_esp32"
+          console.log(thingName);
+          var mydata = { "action": "desligado", "thingname": thingName };
+          console.log(mydata);
+          document.getElementById("autostatus").innerHTML = "DESATIVADO";
+          document.getElementById("autostatus").setAttribute("class", "subtitle has-text-danger");
+          $.ajax({
+            type: 'POST',
+            url: 'https://gjvhq1r777.execute-api.us-east-1.amazonaws.com/Dev/shadow-state',
+            contentType: 'application/json',
+            crossDomain: true,
+            processData: false,
+            dataType: "json",
+            data: JSON.stringify(mydata),
+            success: function (data) {
+              console.log(" off success");
+              document.getElementById("autostatus").setAttribute("class", "subtitle has-text-danger ");
+              document.getElementById("onoff").setAttribute("class", "tile is-child box");
+              document.getElementById("linkled").setAttribute("style", "pointer-events: auto;");
+            },
+            error: function (data) {
+              console.log(" off fail");
+              document.getElementById("autostatus").setAttribute("class", "subtitle has-text-danger ");
+              document.getElementById("onoff").setAttribute("class", "tile is-child box");
+              document.getElementById("linkled").setAttribute("style", "pointer-events: auto;");
+            }
+          });
+        }
+      });
+      // LED
       $("#onoff").click(function (event) {
         currentvalue = document.getElementById('status').innerHTML;
         if (currentvalue == "It's Off") {
@@ -145,6 +212,7 @@
         }
       });
 
+      // CHECANDO DADOS NA API (AO ABRIR DASHBOARD)
       $("#fndbtn").click(function (event) {
         console.log("testing the button");
         //check the status of Shadow
@@ -162,7 +230,7 @@
           success: function (data) {
             console.log("success");
             console.log(data.status);
-            document.getElementById("onoff").innerHTML = data.status;
+            document.getElementById("status").innerHTML = data.status;
             if (data.status == "It's On") {
               document.getElementById("onoff").setAttribute("class", "tile is-child box notification is-success");
             }
@@ -199,7 +267,7 @@
       <div class="card-content">
         <p class="title">START CONNECTION</p>
         <br>
-        <button class="especialbutton" onclick="Mudarestado('data')">CONNECT WITH ESP</button>
+        <button class="especialbutton" onclick="Mudarestado('data')" id="fndbtn">CONNECT WITH ESP</button>
       </div>
     </div>
   </div>
@@ -211,30 +279,30 @@
     </div>
     <div class="salve2 column is-10 is-offset-1" style="color:black">
       <div class="tile is-ancestor">
-        <div class="tile is-5 is-parent">
-          <article class="tile is-child box">
+        <a class="tile is-5 is-parent">
+          <article class="tile is-child box" id="auto">
             <p class="title">Modo Automático</p>
-            <p class="subtitle" style="font-size:x-large;">ATIVO</p>
-          </article>
-        </div>
-        
-        <a class="tile is-parent">
-          <article class="tile is-child box notification is-success" id="onoff">
-            <p class="title">Led</p>
-            <p class="subtitle" id="status">ON</p>
+            <p class="subtitle has-text-danger" id="autostatus">DESATIVADO</p>
           </article>
         </a>
-        
+
+        <a class="tile is-parent" id="linkled">
+          <article class="tile is-child box" id="onoff">
+            <p class="title">Led</p>
+            <p class="subtitle is-loading" id="status">Carregando...</p>
+          </article>
+        </a>
+
         <div class="tile is-parent">
           <article class="tile is-child box">
             <p class="title">Nível</p>
-            <p class="subtitle" id="showLevel"></p>
+            <p class="subtitle" id="showLevel">Carregando...</p>
           </article>
         </div>
         <div class="tile is-parent">
           <article class="tile is-child box">
             <p class="title">Hora</p>
-            <p class="subtitle" id="showHora"></p>
+            <p class="subtitle" id="showHora">Carregando...</p>
           </article>
         </div>
       </div>
@@ -325,11 +393,11 @@
     let getWheatherData = function () {
       $.ajax({
         type: "GET",
-        url: "http://streamdata-tcc2022.s3-website-us-east-1.amazonaws.com/myKey",  //example: https://mydatabucket.s3.amazonaws.com/myKey"
+        url: "https://streamdata-tcc2022.s3.amazonaws.com/myKey",  //example: https://mydatabucket.s3.amazonaws.com/myKey"
         dataType: "json",
         async: false,
         success: function (data) {
-          console.log('data', data);
+          //console.log('data', data);
           drawChart(data);
         },
         error: function (xhr, status, error) {
@@ -352,8 +420,12 @@
       // humidity = isEmptyHum ? 0 : humidity;
       // temperature = isEmptyTemp ? 0 : temperature;
 
-      console.log("Umidade:", humidity);
-      console.log("Temperatura:", temperature);
+      // console.log("Umidade:", humidity);
+      //console.log("Temperatura:", temperature);
+      humidity = 47;
+      temperature = 22;
+      level = 1;
+      hour = "16:50";
 
       humArr.push(Number(humidity));
       tempArr.push(Number(temperature));
@@ -365,9 +437,9 @@
 
       document.getElementById("showHora").innerHTML = hour;
 
-      if(level == 0){
+      if (level == 0) {
         document.getElementById("showLevel").innerHTML = "Vazio";
-      }else{
+      } else {
         document.getElementById("showLevel").innerHTML = "Ok!";
       }
 

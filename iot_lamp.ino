@@ -22,6 +22,10 @@ int msgReceived = 0;
 String rcvdPayload;
 char sndPayloadOff[512];
 char sndPayloadOn[512];
+
+char sndPayloadAutoOn[512];
+char sndPayloadAutoOff[512];
+
 // to sensors
 String Hora; 
 float Temperatura = 0;
@@ -127,11 +131,15 @@ void setup() {
   
   Serial.begin(9600);
   pinMode(13, OUTPUT);
+  pinMode(12, OUTPUT);
   pinMode(SN, INPUT);
   
   sprintf(sndPayloadOn,"{\"state\": { \"reported\": { \"status\": \"on\" } }}");
   sprintf(sndPayloadOff,"{\"state\": { \"reported\": { \"status\": \"off\" } }}");
-  
+  //new payloads
+  sprintf(sndPayloadAutoOff,"{\"state\": { \"reported\": { \"auto\": \"desligado\" } }}");
+  sprintf(sndPayloadAutoOn,"{\"state\": { \"reported\": { \"auto\": \"ligado\" } }}");
+
   connectAWS();
   
   dht.begin();
@@ -140,40 +148,70 @@ void setup() {
   
   Serial.println("Setting Lamp Status to Off");
   client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadOff);
-  
   Serial.println("##############################################");
 }
 
 void loop() {
-    readsensors();
-    publishSensors();
+   //readsensors();
+   //publishSensors();
+
+   //Quando receber mensagem do servidor
    if(msgReceived == 1)
     {
-//      This code will run whenever a message is received on the SUBSCRIBE_TOPIC_NAME Topic
+    //This code will run whenever a message is received on the SUBSCRIBE_TOPIC_NAME Topic
         delay(100);
         msgReceived = 0;
         Serial.print("Received Message:");
         Serial.println(rcvdPayload);
         StaticJsonDocument<200> sensor_doc;
         DeserializationError error_sensor = deserializeJson(sensor_doc, rcvdPayload);
-        const char *sensor = sensor_doc["state"]["status"];
- 
-        Serial.print("AWS Says:");
-        Serial.println(sensor); 
         
-        if(strcmp(sensor, "on") == 0)
-        {
-         Serial.println("IF CONDITION");
-         Serial.println("Turning Lamp On");
-         digitalWrite(13, HIGH);
-         client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadOn);
+        const char *sensor = sensor_doc["state"]["status"];
+        const char *automode = sensor_doc["state"]["auto"];
+        
+        Serial.print("Sensor:");
+        Serial.println(sensor);
+        Serial.print("Auto Mode:");
+        Serial.println(automode);
+
+        
+        // IF SENSOR NULL
+        if(sensor[0] == '\0') {
+          printf("sensor is empty\n");
+          // New conditions
+          if(strcmp(automode, "ligado") == 0) 
+          {
+            Serial.println("ON AUTO CONDITION");
+            Serial.println("WORKING ON AUTO MODE");
+            digitalWrite(12, HIGH);
+            client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadAutoOn);
+          }
+          if(strcmp(automode, "desligado") == 0) 
+          {
+            Serial.println("OFF AUTO CONDITION");
+            Serial.println("WORKING ON MANUAL MODE");
+            digitalWrite(12, LOW);
+            client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadAutoOff);
+          }
         }
-        else 
-        {
-         Serial.println("ELSE CONDITION");
-         Serial.println("Turning Lamp Off");
-         digitalWrite(13, LOW);
-         client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadOff);
+        
+        // IF AUTOMODE NULL
+        if (automode[0] == '\0'){
+          printf("automode is empty\n");
+          if(strcmp(sensor, "on") == 0)
+          {
+           Serial.println("IF STATUS CONDITION");
+           Serial.println("Turning Lamp On");
+           digitalWrite(13, HIGH);
+           client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadOn);
+          }
+          if(strcmp(sensor, "off") == 0) 
+          {
+           Serial.println("OFF STATUS CONDITION");
+           Serial.println("Turning Lamp Off");
+           digitalWrite(13, LOW);
+           client.publish(AWS_IOT_PUBLISH_TOPIC, sndPayloadOff);
+          }
         }
       Serial.println("##############################################");
     }
